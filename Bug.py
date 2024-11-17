@@ -1,10 +1,9 @@
 import random
 import struct
-from numba import njit
 
 class Bug:
-    def __init__(self, id = int, loc = tuple, genome = bytes, genomelength = int, direction = None, nnet = None):
-        self.id = id
+    def __init__(self, index = int, loc = tuple, genome = bytes, genomelength = int, direction = None, nnet = None):
+        self.index = index
         self.alive = True
         self.loc = loc
         self.age = 0
@@ -29,7 +28,7 @@ class Bug:
             return gene
         genome = b''.join([geneinit() for _ in range(genomelength)])
         self.genome = genome
-    @njit
+
     def cpu_intensive_task(self, n=int):
         if n <= 1:
             return n
@@ -38,7 +37,7 @@ class Bug:
 
 
     def move(self,dir = None):
-        self.cpu_intensive_task(n=15)
+        # self.cpu_intensive_task(n=15)
         dir = random.randint(0,7)
         match dir:
             case 0:  # move S
@@ -59,4 +58,4 @@ class Bug:
                 newcoord = (self.loc[0] - 1, self.loc[1] - 1)  # Move southwest
             case _:  # If dir is 8 or invalid, do not move
                 newcoord = self.loc  # Stay in place
-        return((self.id,dir,newcoord))
+        return((self.index,dir,newcoord))

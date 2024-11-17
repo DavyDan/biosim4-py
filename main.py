@@ -1,42 +1,44 @@
 from datetime import datetime, timedelta
 
-import Simulator
-
-
+from simulator import Simulator
+from animation import Animation
 start = datetime.now()
-# from moviemaker import makemovie
-#hello to my self 1004
-class Brain:
-    def __init__(self):
-        pass
-    def probe():
-        pass
-# test multi vs single proc
+
   
 
 def main():
-    sim = Simulator.Simulator(
+    print(f'sim start {datetime.now()}')
+#init sim
+    
+    sim = Simulator(
         population= 1000,
         genomelength= 4,
         arenasize= 128,
         corecount= 4,
         multiproc= False,
-        stepcount= 10,
+        stepcount= 300,
         gencount= 10 )
-    
+#init bugs and then run sim
     sim.buginit(sim)
-    date_times = sim.simloop()
-
+    sim.simloop()
+#animate sim
+    anim = Animation(
+            sim.arenasize,
+            screen_size=800,
+            cell_size= 40)
+    anim.create_gif_from_grids(sim.metagridstates)
+#time sim
+    generationtimes = sim.generationtimes
     endtime = datetime.now() - start
+    # differences = [(date_times[i] - date_times[i - 1]) for i in range(1, len(date_times))]
+    # total_difference = sum(differences, timedelta())
+    # average_difference = total_difference / len(differences)
 
-    differences = [(date_times[i] - date_times[i - 1]) for i in range(1, len(date_times))]
-    total_difference = sum(differences, timedelta())
-    average_difference = total_difference / len(differences)
-
-    print(f'endtime: {endtime.microseconds//1000}, time per gen: {average_difference.microseconds//1000}')
-
+    print(f'sim complete {datetime.now} \n endtime: {endtime}')
+  
 
 if __name__ == '__main__':
     main()
+    
     # makemovie()
     

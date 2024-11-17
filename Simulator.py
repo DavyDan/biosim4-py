@@ -2,10 +2,9 @@ from datetime import datetime
 import random
 import numpy as np
 import multiprocessing
-from numba import njit
+import pygame
 
-from Bug import Bug
-
+from bug import Bug
 
 class Simulator():
     def __init__(self,population, genomelength, arenasize, corecount, multiproc, stepcount, gencount):
@@ -18,22 +17,14 @@ class Simulator():
         self.corecount = corecount
         self.multiproc = multiproc
 
+        self.metagridstates = []
+        self.gridstates = []
+        
         self.grid = np.zeros((arenasize,arenasize),int)
         
-    def simloop(self):
-        #init the sim
-        gencount = self.gencount
-        stepcount = self.stepcount
-        #sim loop
-        generationtime = []
-        for generation in range(gencount):
-            # print(f'beggining generation: {generation}')
-            generationtime.append(datetime.now())
-        #generation loop
-            for step in range(stepcount):
-                self.executemove()
-        print(f'simulation complete')
-        return generationtime
+        self.generationtimes = []
+        
+
     def findempty(self):
         arenasize = self.arenasize -1
         while True:
@@ -43,10 +34,10 @@ class Simulator():
                 break
         return (x,y)
     def update(self, loc, bugid, z = 0):
-        bugs = self.bugs
         if z == False:
             self.grid[loc] = bugid
         else:
+            bugs = self.bugs
             self.grid[bugs[bugid-1].loc] = 0
             self.grid[loc] = bugid
 
@@ -54,9 +45,9 @@ class Simulator():
         bugs = []
         for i in range(self.population):
             coords = self.findempty()
-            bugs.append(Bug(id=i+1,loc = coords))
+            bugs.append(Bug(index=i+1,loc = coords))
+            self.update(coords,i)
         self.bugs = bugs
-    
     def setupmoves(self):
         movelist = []
         for bug in self.bugs:
@@ -73,16 +64,32 @@ class Simulator():
             results = pool.map(self.worker, self.bugs)
         return results
 
-    def executemove(self):
+    def executemove(self, frames):
+        # print(f"Frame {frames}: Grid before update:\n{self.grid}")
         arenasize = self.arenasize
         if self.multiproc:
             movelist = self.setupmovesmulti()
         else:
             movelist = self.setupmoves()
-        for id,direction,coords in movelist:
+        for index,direction,coords in movelist:
             x, y = coords
             if 0 <= x < arenasize and 0 <= y < arenasize:
                 if self.grid[coords]==0:
-                    self.update(coords,id,z=True)
-                    self.bugs[id-1].loc = coords
-                    self.bugs[id-1].direction = direction
+                    self.update(coords,index,z=True)
+                    self.bugs[index-1].loc = coords
+                    self.bugs[index-1].direction = direction
+        self.gridstates.append(np.copy(self.grid))
+        # print(f"Frame {frames}: Grid after update:\n{self.grid}")
+        
+        
+    def genloop(self,generation):
+        for step in range(self.stepcount):
+            self.executemove(generation)
+    def simloop(self):
+        #init the sim
+        for generation in range(self.gencount):
+            self.generationtimes.append(datetime.now())
+            self.genloop(generation)
+            self.metagridstates.append(self.gridstates)
+            self.gridstates.clear
+    
